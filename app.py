@@ -65,9 +65,9 @@ st.markdown("""
 # Header
 st.markdown('<p class="main-header">Cover Letter Generator</p>', unsafe_allow_html=True)
 
-# Get formatted date
+# Get formatted date using today's date
 def get_formatted_date():
-    today = datetime.now()
+    today = datetime.today()
     day = today.day
     month_year = today.strftime("%B %Y")
     
@@ -173,27 +173,40 @@ with tab2:
                 client = OpenAI(api_key=api_key)
                 
                 prompt = f"""
-                Write the main body of a personalized cover letter for a candidate applying to {company} for the {position} position. 
-                The candidate has the following qualifications:
+                You are a professional writer helping craft a cover letter. Write ONLY the body paragraphs (no greeting, no closing, no signature) for a cover letter applying to {company} for the {position} position.
+
+                Candidate's background:
                 {resume}
-                The job requirements are:
+
+                Job requirements:
                 {position_requirements}
-                The company values and facts are:
+
+                Company information:
                 {company_facts if company_facts else "Not provided"}
+
+                IMPORTANT WRITING GUIDELINES:
+                - Write in a natural, conversational yet professional tone
+                - Avoid generic phrases like "I am excited to apply" or "I believe I would be a great fit"
+                - Use specific examples and concrete achievements from the resume
+                - Vary sentence structure and length - mix short punchy sentences with longer ones
+                - Avoid starting multiple sentences with "I"
+                - Do NOT use buzzwords like "passionate", "driven", "leverage", "synergy", "utilize"
+                - Sound like a real person wrote this, not an AI
+                - Be direct and confident without being arrogant
+                - Connect specific skills to specific job requirements
+                - Keep it concise - 3-4 paragraphs maximum
                 
-                The candidate's goal is to convey enthusiasm, professionalism, and demonstrate a strong alignment between their skills and the company's needs, focusing only on the body of the letter. Do not include placeholders or any other fill-in-the-blank sections, only generate the content directly relevant to the cover letter body.
-                
-                {"Use this cover letter example as a structure for reference (but do not repeat it exactly): " + cover_letter_example if cover_letter_example else ""}
+                {"Reference this example for tone and structure (but write original content): " + cover_letter_example if cover_letter_example else ""}
                 """
                 
                 response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                        {"role": "system", "content": "You are a helpful assistant that writes professional cover letters."},
+                        {"role": "system", "content": "You are an expert cover letter writer who writes in a natural, human voice. You avoid clichés, buzzwords, and generic AI-sounding phrases. Your writing is direct, specific, and sounds like it was written by a real professional."},
                         {"role": "user", "content": prompt}
                     ],
                     max_tokens=1500,
-                    temperature=0.7
+                    temperature=0.8
                 )
                 
                 new_letter = response.choices[0].message.content.strip()
