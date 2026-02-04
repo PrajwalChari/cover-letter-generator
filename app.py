@@ -31,6 +31,34 @@ st.markdown("""
     .block-container {
         padding-top: 2rem;
     }
+    .version-header {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    .version-header-default {
+        background-color: #f0f2f6;
+        color: #333;
+    }
+    .version-header-selected {
+        background-color: #1e88e5;
+        color: white;
+    }
+    .selected-container {
+        border: 3px solid #1e88e5;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background-color: #e3f2fd;
+    }
+    .default-container {
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background-color: #fafafa;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -50,9 +78,13 @@ def get_formatted_date():
     
     return f"{month_year.split()[0]} {day}{suffix}, {month_year.split()[1]}"
 
-# Initialize session state
-if 'generated_letter' not in st.session_state:
-    st.session_state.generated_letter = ""
+# Initialize session state for multiple versions
+if 'cover_letters' not in st.session_state:
+    st.session_state.cover_letters = []  # List of dicts: {id, content, timestamp}
+if 'next_id' not in st.session_state:
+    st.session_state.next_id = 1
+if 'selected_letter_id' not in st.session_state:
+    st.session_state.selected_letter_id = None
 
 # Sidebar for API Key
 with st.sidebar:
@@ -164,28 +196,101 @@ with tab2:
                     temperature=0.7
                 )
                 
-                st.session_state.generated_letter = response.choices[0].message.content.strip()
-                st.success("Cover letter generated successfully! Go to 'Preview & Download' tab to view and download.")
+                new_letter = response.choices[0].message.content.strip()
+                
+                # Add new version to the beginning of the list
+                new_version = {
+                    'id': st.session_state.next_id,
+                    'content': new_letter,
+                    'timestamp': datetime.now().strftime("%I:%M %p")
+                }
+                st.session_state.cover_letters.insert(0, new_version)
+                st.session_state.selected_letter_id = new_version['id']
+                st.session_state.next_id += 1
+                
+                st.success("Cover letter generated! New version added at the top.")
+                st.rerun()
                 
             except Exception as e:
                 st.error(f"Error generating cover letter: {str(e)}")
     
-    # Editable text area for the generated letter
-    if st.session_state.generated_letter:
+    # Display all versions with editable text areas
+    if st.session_state.cover_letters:
         st.divider()
-        st.subheader("Edit Your Cover Letter")
-        edited_letter = st.text_area(
-            "Make any edits you need:",
-            value=st.session_state.generated_letter,
-            height=400,
-            key="edited_letter"
-        )
-        st.session_state.generated_letter = edited_letter
+        st.subheader("Generated Cover Letters")
+        st.caption("Newest versions appear at the top. All versions are editable.")
+        
+        for i, letter in enumerate(st.session_state.cover_letters):
+            # Check if this version is selected
+            is_selected = st.session_state.selected_letter_id == letter['id']
+            
+            # Container styling based on selection
+            container_class = "selected-container" if is_selected else "default-container"
+            header_class = "version-header version-header-selected" if is_selected else "version-header version-header-default"
+            
+            st.markdown(f'<div class="{container_class}">', unsafe_allow_html=True)
+            
+            col1, col2 = st.columns([6, 1])
+            with col1:
+                status_text = " - SELECTED" if is_selected else ""
+                st.markdown(f'<div class="{header_class}">Version {letter["id"]} - {letter["timestamp"]}{status_text}</div>', unsafe_allow_html=True)
+            with col2:
+                button_label = "Selected" if is_selected else "Select"
+                if st.button(button_label, key=f"select_{letter['id']}", use_container_width=True, disabled=is_selected):
+                    st.session_state.selected_letter_id = letter['id']
+                    st.rerun()
+            
+            edited_content = st.text_area(
+                f"Edit Version {letter['id']}" + (" (Selected for Download)" if is_selected else ""),
+                value=letter['content'],
+                height=300,
+                key=f"letter_{letter['id']}"
+            )
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Update the stored content if edited
+            st.session_state.cover_letters[i]['content'] = edited_content
+            
+            if i < len(st.session_state.cover_letters) - 1:
+                st.divider()
 
 with tab3:
     st.subheader("Preview & Download")
     
-    if st.session_state.generated_letter:
+    # Get the selected letter
+    selected_letter = None
+    if st.session_state.selected_letter_id and st.session_state.cover_letters:
+        for letter in st.session_state.cover_letters:
+            if letter['id'] == st.session_state.selected_letter_id:
+                selected_letter = letter
+                break
+    
+    # If no selection but letters exist, use the first one
+    if not selected_letter and st.session_state.cover_letters:
+        selected_letter = st.session_state.cover_letters[0]
+        st.session_state.selected_letter_id = selected_letter['id']
+    
+    if selected_letter:
+        # Show current selection prominently
+        st.success(f"Currently viewing: Version {selected_letter['id']} (Generated at {selected_letter['timestamp']})")
+        
+        # Version selector
+        if len(st.session_state.cover_letters) > 1:
+            version_options = [f"Version {l['id']} ({l['timestamp']})" for l in st.session_state.cover_letters]
+            selected_idx = next((i for i, l in enumerate(st.session_state.cover_letters) if l['id'] == st.session_state.selected_letter_id), 0)
+            
+            selected_version = st.selectbox(
+                "Select version to preview/download:",
+                options=version_options,
+                index=selected_idx
+            )
+            
+            # Update selected letter based on dropdown
+            new_idx = version_options.index(selected_version)
+            selected_letter = st.session_state.cover_letters[new_idx]
+            st.session_state.selected_letter_id = selected_letter['id']
+        
         # Preview section
         formatted_date = get_formatted_date()
         
@@ -198,12 +303,33 @@ with tab3:
             st.markdown(f"**{company}**")
             st.markdown(f"**{position}**")
             st.markdown("")
-            st.markdown(st.session_state.generated_letter)
+            st.markdown(selected_letter['content'])
         
         st.divider()
         
         # PDF Generation
         st.markdown("### Download Options")
+        
+        # Filename format selector
+        filename_format = st.radio(
+            "Filename format:",
+            options=["Company Name", "Position Name", "Both (Company_Position)"],
+            horizontal=True
+        )
+        
+        # Generate filename based on selection
+        def get_filename(extension):
+            company_clean = company.replace(' ', '_') if company else 'Company'
+            position_clean = position.replace(' ', '_') if position else 'Position'
+            
+            if filename_format == "Company Name":
+                base = f"Cover_Letter_{company_clean}"
+            elif filename_format == "Position Name":
+                base = f"Cover_Letter_{position_clean}"
+            else:  # Both
+                base = f"Cover_Letter_{company_clean}_{position_clean}"
+            
+            return f"{base}_v{selected_letter['id']}.{extension}"
         
         col1, col2 = st.columns(2)
         
@@ -231,7 +357,7 @@ with tab3:
                     pdf.cell(0, line_height, position if position else "", ln=True)
                     pdf.ln(line_height)
                     
-                    for paragraph in st.session_state.generated_letter.split("\n\n"):
+                    for paragraph in selected_letter['content'].split("\n\n"):
                         pdf.multi_cell(0, line_height, paragraph, align="L")
                         pdf.ln(line_height / 2)
                     
@@ -242,7 +368,7 @@ with tab3:
                     st.download_button(
                         label="Download PDF",
                         data=pdf_output,
-                        file_name=f"Cover_Letter_{company.replace(' ', '_') if company else 'Company'}.pdf",
+                        file_name=get_filename("pdf"),
                         mime="application/pdf",
                         use_container_width=True
                     )
@@ -255,8 +381,8 @@ with tab3:
             # Text download option
             st.download_button(
                 label="Download as Text",
-                data=f"{formatted_date}\n\nHiring Manager\n{company}\n{position}\n\n{st.session_state.generated_letter}",
-                file_name=f"Cover_Letter_{company.replace(' ', '_') if company else 'Company'}.txt",
+                data=f"{formatted_date}\n\nHiring Manager\n{company}\n{position}\n\n{selected_letter['content']}",
+                file_name=get_filename("txt"),
                 mime="text/plain",
                 use_container_width=True
             )
