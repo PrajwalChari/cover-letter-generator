@@ -1,0 +1,24 @@
+Dear Hiring Manager,
+I am writing to express my interest in the Engineering Intern position at ConocoPhillips. With a strong
+foundation in Electrical Engineering from the University of British Columbia and hands-on experience
+in Embedded Systems, Machine Learning, Automation, and Data Analysis, I am excited about the
+opportunity to contribute to ConocoPhillips' innovative projects.
+During my recent internship at MechaSense, I developed a machine learning model that successfully
+detected phase current imbalances in motors with a high accuracy rate, effectively preventing HVAC
+system failures. I also automated real-time monitoring of HVAC systems using AWS-based solutions,
+reducing potential downtime by 20%. My experience in diagnosing critical issues through data analysis
+and leading the creation of synthetic datasets has equipped me with the skills necessary to optimize
+operational processes and ensure system reliability.
+As the Avionics Team Lead at UBCO Aerospace Rocket Team, I led the development of a flight
+computer and integrated commercial flight computers to enhance system redundancy. By
+implementing a PID control loop for an active recovery system, I achieved precise control and
+improved safety measures, showcasing my ability to innovate and problem-solve in a collaborative
+team setting.
+I am eager to bring my technical skills in PCB design, embedded systems, automation, machine
+learning, and data analysis to ConocoPhillips, where I can contribute to optimizing operational
+processes and driving innovation. I am excited about the prospect of working with a diverse team of
+engineers and professionals to tackle challenging operational issues and deliver sustainable solutions.
+Thank you for considering my application. I look forward to the opportunity to discuss how my
+background, skills, and enthusiasm align with the goals and values of ConocoPhillips.
+Sincerely,
+Prajwal Venkatesha Chari

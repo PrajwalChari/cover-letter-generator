@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+desktop.ini
+.DS_Store
+Thumbs.db
+
+# API keys - never commit these
+apikey.txt
+
+# Generated PDFs
+*.pdf
+
+# Personal data files (optional - remove if you want to include samples)
+resume.txt
+facts.txt
+position.txt
