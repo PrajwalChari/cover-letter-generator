@@ -1,7 +1,7 @@
 import streamlit as st
 from openai import OpenAI
 from fpdf import FPDF
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import io
 import base64
 
@@ -65,9 +65,11 @@ st.markdown("""
 # Header
 st.markdown('<p class="main-header">Cover Letter Generator</p>', unsafe_allow_html=True)
 
-# Get formatted date using today's date
+# Get formatted date using MST timezone
 def get_formatted_date():
-    today = datetime.today()
+    # MST is UTC-7
+    mst = timezone(timedelta(hours=-7))
+    today = datetime.now(mst)
     day = today.day
     month_year = today.strftime("%B %Y")
     
